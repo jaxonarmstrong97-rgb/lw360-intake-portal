@@ -681,8 +681,12 @@ function IntakeForm() {
       // Calculate total employees
       const totalEmployees = parseInt(formData.employeeCountFulltime || 0) + parseInt(formData.employeeCountParttime || 0);
 
-      // Prepare organization data — intake_code is generated server-side by DB trigger
+      // Generate a unique org code (required NOT NULL column)
+      const randomCode = 'ORG-' + Array.from(crypto.getRandomValues(new Uint8Array(4)))
+        .map(b => b.toString(36).toUpperCase().padStart(2, '0')).join('').slice(0, 6);
+
       const orgData = {
+        code: randomCode,
         name: formData.companyName,
         legal_name: formData.legalName || formData.companyName,
         entity_type: formData.entityType,
@@ -691,30 +695,29 @@ function IntakeForm() {
         address_city: formData.addressCity,
         address_state: formData.addressState,
         address_zip: formData.addressZip,
-        contact_name: formData.contactName,
-        contact_title: formData.contactTitle,
-        contact_email: formData.contactEmail,
-        contact_phone: formData.contactPhone,
-        is_trs: isSchoolDistrict ? formData.isTRS === 'yes' : null,
-        pays_via_esc: isSchoolDistrict ? formData.paysViaESC === 'yes' : null,
-        esc_name: isSchoolDistrict && formData.paysViaESC === 'yes' ? formData.escName : null,
+        primary_contact_name: formData.contactName,
+        primary_contact_title: formData.contactTitle,
+        primary_contact_email: formData.contactEmail,
+        primary_contact_phone: formData.contactPhone,
+        is_trs_district: isSchoolDistrict ? formData.isTRS === 'yes' : false,
+        pays_through_esc: isSchoolDistrict ? formData.paysViaESC === 'yes' : false,
         pay_frequency: formData.payFrequency,
         payroll_provider: formData.payrollProvider === 'Other' ? formData.payrollProviderOther : formData.payrollProvider,
         next_pay_date: formData.nextPayDate || null,
         employee_count_fulltime: parseInt(formData.employeeCountFulltime) || 0,
         employee_count_parttime: parseInt(formData.employeeCountParttime) || 0,
         employee_count_total: totalEmployees,
-        health_insurance_carrier: formData.healthInsuranceCarrier,
-        has_section_125: formData.hasSection125 === 'yes',
+        current_health_carrier: formData.healthInsuranceCarrier,
+        has_section_125_plan: formData.hasSection125 === 'yes',
         has_union_employees: formData.hasUnionEmployees === 'yes',
-        fiscal_year_end: formData.fiscalYearEnd,
-        update_preference: formData.updatePreference,
+        fiscal_year_end: formData.fiscalYearEnd || null,
+        monthly_update_preference: formData.updatePreference || 'Self-Service',
         special_circumstances: formData.specialCircumstances,
         pipeline_stage: 'Intake Received',
         intake_submitted_at: new Date().toISOString(),
-        signature_name: formData.signatureName,
-        signature_title: formData.signatureTitle,
-        signature_date: formData.signatureDate || new Date().toISOString().split('T')[0],
+        intake_signature_name: formData.signatureName,
+        intake_signature_date: formData.signatureDate || new Date().toISOString().split('T')[0],
+        is_test: true,
       };
 
       // Insert organization
