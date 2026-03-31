@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // LW360 EMPLOYER INTAKE PORTAL - COMPLETE VERSION
@@ -7,8 +7,8 @@ import React, { useState, useCallback, useRef } from 'react';
 // ═══════════════════════════════════════════════════════════════════════════════
 
 // Supabase Configuration
-const SUPABASE_URL = 'https://aetyraaujylcqhmkozkv.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFldHlyYWF1anlsY3FobWtvemt2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE4MTk2MjQsImV4cCI6MjA1NzM5NTYyNH0.NaKeBpGchvyjmFBCUBjQPSygyY2KuCT3Rh3gGPy4kSo';
+const SUPABASE_URL = 'https://aejnfgtttbenrnlmrsam.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFlam5mZ3R0dGJlbnJubG1yc2FtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2Mzk5NTMsImV4cCI6MjA5MDIxNTk1M30.8fLf1gmgdtF3J0JaLX_LC73Jk15N451zAfiM6NuDXdU';
 
 // Brand Colors
 const COLORS = {
@@ -163,14 +163,18 @@ function FormSection({ number, title, description, children, isConditional = fal
 }
 
 // Form Grid
-function FormGrid({ children, columns = 2 }) {
+function FormGrid({ children, columns = 2, className }) {
+  const defaultClass = columns === 3 ? 'form-grid-3' : 'form-grid-2';
   return (
-    <div style={{
-      display: 'grid',
-      gridTemplateColumns: `repeat(${columns}, 1fr)`,
-      gap: '16px',
-      marginBottom: '16px',
-    }}>
+    <div
+      className={className || defaultClass}
+      style={{
+        display: 'grid',
+        gridTemplateColumns: `repeat(${columns}, 1fr)`,
+        gap: '16px',
+        marginBottom: '16px',
+      }}
+    >
       {children}
     </div>
   );
@@ -357,6 +361,7 @@ function Checkbox({ checked, onChange, label }) {
 function FileUpload({ file, onFileSelect, onFileRemove, accept = '.csv,.xls,.xlsx', maxSizeMB = 10 }) {
   const fileInputRef = useRef(null);
   const [dragOver, setDragOver] = useState(false);
+  const [fileError, setFileError] = useState('');
 
   const handleDrop = useCallback((e) => {
     e.preventDefault();
@@ -380,15 +385,16 @@ function FileUpload({ file, onFileSelect, onFileRemove, accept = '.csv,.xls,.xls
   const validateAndSetFile = (selectedFile) => {
     const maxSize = maxSizeMB * 1024 * 1024;
     if (selectedFile.size > maxSize) {
-      alert(`File size must be less than ${maxSizeMB}MB`);
+      setFileError(`File size must be less than ${maxSizeMB}MB`);
       return;
     }
     const ext = selectedFile.name.split('.').pop().toLowerCase();
     const allowedExts = accept.split(',').map(a => a.replace('.', '').trim());
     if (!allowedExts.includes(ext)) {
-      alert(`Please upload a ${accept} file`);
+      setFileError(`Please upload a ${accept} file`);
       return;
     }
+    setFileError('');
     onFileSelect(selectedFile);
   };
 
@@ -446,40 +452,45 @@ function FileUpload({ file, onFileSelect, onFileRemove, accept = '.csv,.xls,.xls
   }
 
   return (
-    <div
-      onDrop={handleDrop}
-      onDragOver={handleDragOver}
-      onDragLeave={handleDragLeave}
-      onClick={() => fileInputRef.current?.click()}
-      style={{
-        border: `2px dashed ${dragOver ? COLORS.lime : COLORS.grayMedium}`,
-        borderRadius: '12px',
-        padding: '40px 20px',
-        textAlign: 'center',
-        background: dragOver ? `${COLORS.lime}10` : COLORS.gray,
-        cursor: 'pointer',
-        transition: 'all 0.2s',
-      }}
-    >
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept={accept}
-        onChange={(e) => {
-          if (e.target.files[0]) {
-            validateAndSetFile(e.target.files[0]);
-          }
+    <React.Fragment>
+      <div
+        onDrop={handleDrop}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onClick={() => fileInputRef.current?.click()}
+        style={{
+          border: `2px dashed ${dragOver ? COLORS.lime : COLORS.grayMedium}`,
+          borderRadius: '12px',
+          padding: '40px 20px',
+          textAlign: 'center',
+          background: dragOver ? `${COLORS.lime}10` : COLORS.gray,
+          cursor: 'pointer',
+          transition: 'all 0.2s',
         }}
-        style={{ display: 'none' }}
-      />
-      <div style={{ fontSize: '36px', marginBottom: '12px', opacity: 0.6 }}>📁</div>
-      <p style={{ margin: '0 0 6px', fontSize: '15px', fontWeight: '600', color: COLORS.navy }}>
-        Drag & drop your file here
-      </p>
-      <p style={{ margin: 0, fontSize: '13px', color: COLORS.grayDark }}>
-        or click to browse • CSV, XLS, XLSX (max {maxSizeMB}MB)
-      </p>
-    </div>
+      >
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept={accept}
+          onChange={(e) => {
+            if (e.target.files[0]) {
+              validateAndSetFile(e.target.files[0]);
+            }
+          }}
+          style={{ display: 'none' }}
+        />
+        <div style={{ fontSize: '36px', marginBottom: '12px', opacity: 0.6 }}>📁</div>
+        <p style={{ margin: '0 0 6px', fontSize: '15px', fontWeight: '600', color: COLORS.navy }}>
+          Drag & drop your file here
+        </p>
+        <p style={{ margin: 0, fontSize: '13px', color: COLORS.grayDark }}>
+          or click to browse • CSV, XLS, XLSX (max {maxSizeMB}MB)
+        </p>
+      </div>
+      {fileError && (
+        <p style={{ margin: '8px 0 0', fontSize: '13px', color: COLORS.red }}>{fileError}</p>
+      )}
+    </React.Fragment>
   );
 }
 
@@ -546,8 +557,21 @@ function IntakeForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState(null); // 'success' | 'error' | null
   const [enrollmentCode, setEnrollmentCode] = useState('');
+  const [formTouched, setFormTouched] = useState(false);
+
+  useEffect(() => {
+    if (!formTouched) return;
+    const handler = (e) => {
+      e.preventDefault();
+      e.returnValue = '';
+      return '';
+    };
+    window.addEventListener('beforeunload', handler);
+    return () => window.removeEventListener('beforeunload', handler);
+  }, [formTouched]);
 
   const updateField = (field, value) => {
+    if (!formTouched) setFormTouched(true);
     setFormData(prev => ({ ...prev, [field]: value }));
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: null }));
@@ -556,10 +580,17 @@ function IntakeForm() {
 
   const isSchoolDistrict = formData.entityType === 'School District';
 
-  const generateEnrollmentCode = (companyName) => {
-    const clean = companyName.replace(/[^a-zA-Z0-9]/g, '').toUpperCase().slice(0, 8);
-    const year = new Date().getFullYear();
-    return `${clean}${year}`;
+  const downloadCensusTemplate = () => {
+    const headers = 'First Name,Last Name,Email,Employee ID,Pay Type,Annual Salary,Hourly Rate,Hours Per Week,Pay Frequency,Filing Status,Employment Type,Job Title,Department';
+    const blob = new Blob([headers + '\n'], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'lw360_census_template.csv';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   };
 
   const validateForm = () => {
@@ -614,9 +645,32 @@ function IntakeForm() {
   };
 
   const handleSubmit = async () => {
-    if (!validateForm()) {
-      // Scroll to first error
-      const firstErrorKey = Object.keys(errors)[0];
+    const validationResult = (() => {
+      const errs = {};
+      if (!formData.companyName.trim()) errs.companyName = 'Company name is required';
+      if (!formData.entityType) errs.entityType = 'Entity type is required';
+      if (!formData.contactName.trim()) errs.contactName = 'Contact name is required';
+      if (!formData.contactEmail.trim()) errs.contactEmail = 'Email is required';
+      else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.contactEmail)) {
+        errs.contactEmail = 'Please enter a valid email';
+      }
+      if (!formData.contactPhone.trim()) errs.contactPhone = 'Phone is required';
+      if (!formData.payFrequency) errs.payFrequency = 'Pay frequency is required';
+      if (!formData.employeeCountFulltime) errs.employeeCountFulltime = 'Full-time count is required';
+      if (!formData.censusFile) errs.censusFile = 'Census file is required';
+      if (!formData.signatureName.trim()) errs.signatureName = 'Signature is required';
+      if (!formData.agreedToTerms) errs.agreedToTerms = 'You must agree to the terms';
+      if (!formData.agreedToAnalysis) errs.agreedToAnalysis = 'You must authorize the analysis';
+      if (isSchoolDistrict) {
+        if (!formData.isTRS) errs.isTRS = 'Please indicate TRS participation';
+        if (!formData.paysViaESC) errs.paysViaESC = 'Please indicate ESC payroll status';
+      }
+      return errs;
+    })();
+
+    if (Object.keys(validationResult).length > 0) {
+      setErrors(validationResult);
+      const firstErrorKey = Object.keys(validationResult)[0];
       document.querySelector(`[data-field="${firstErrorKey}"]`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
       return;
     }
@@ -624,13 +678,10 @@ function IntakeForm() {
     setIsSubmitting(true);
 
     try {
-      const code = generateEnrollmentCode(formData.companyName);
-      setEnrollmentCode(code);
-
       // Calculate total employees
       const totalEmployees = parseInt(formData.employeeCountFulltime || 0) + parseInt(formData.employeeCountParttime || 0);
 
-      // Prepare organization data
+      // Prepare organization data — intake_code is generated server-side by DB trigger
       const orgData = {
         name: formData.companyName,
         legal_name: formData.legalName || formData.companyName,
@@ -659,7 +710,6 @@ function IntakeForm() {
         fiscal_year_end: formData.fiscalYearEnd,
         update_preference: formData.updatePreference,
         special_circumstances: formData.specialCircumstances,
-        enrollment_code: code,
         pipeline_stage: 'Intake Received',
         intake_submitted_at: new Date().toISOString(),
         signature_name: formData.signatureName,
@@ -686,11 +736,15 @@ function IntakeForm() {
 
       const [newOrg] = await insertResponse.json();
 
+      // Read the server-generated intake_code from the DB response
+      const generatedCode = newOrg.intake_code || '';
+      setEnrollmentCode(generatedCode);
+
       // Upload census file if present
       if (formData.censusFile) {
         try {
           const censusPath = await uploadCensusFile(formData.censusFile, newOrg.id);
-          
+
           // Update org with census file path
           await fetch(`${SUPABASE_URL}/rest/v1/organizations?id=eq.${newOrg.id}`, {
             method: 'PATCH',
@@ -707,6 +761,8 @@ function IntakeForm() {
         }
       }
 
+      // Clear beforeunload warning on successful submit
+      setFormTouched(false);
       setSubmitStatus('success');
 
     } catch (err) {
@@ -907,14 +963,16 @@ function IntakeForm() {
         {/* Section 1: Company Information */}
         <FormSection number="1" title="Company Information" description="Tell us about your organization">
           <FormGrid>
-            <FormField label="Company Name" required error={errors.companyName}>
-              <TextInput
-                value={formData.companyName}
-                onChange={(v) => updateField('companyName', v)}
-                placeholder="e.g., Acme Industries"
-                error={errors.companyName}
-              />
-            </FormField>
+            <div data-field="companyName">
+              <FormField label="Company Name" required error={errors.companyName}>
+                <TextInput
+                  value={formData.companyName}
+                  onChange={(v) => updateField('companyName', v)}
+                  placeholder="e.g., Acme Industries"
+                  error={errors.companyName}
+                />
+              </FormField>
+            </div>
             <FormField label="Legal Entity Name" hint="If different from company name">
               <TextInput
                 value={formData.legalName}
@@ -923,16 +981,18 @@ function IntakeForm() {
               />
             </FormField>
           </FormGrid>
-          
+
           <FormGrid>
-            <FormField label="Entity Type" required error={errors.entityType}>
-              <SelectInput
-                value={formData.entityType}
-                onChange={(v) => updateField('entityType', v)}
-                options={ENTITY_TYPES}
-                error={errors.entityType}
-              />
-            </FormField>
+            <div data-field="entityType">
+              <FormField label="Entity Type" required error={errors.entityType}>
+                <SelectInput
+                  value={formData.entityType}
+                  onChange={(v) => updateField('entityType', v)}
+                  options={ENTITY_TYPES}
+                  error={errors.entityType}
+                />
+              </FormField>
+            </div>
             <FormField label="EIN" hint="Employer Identification Number">
               <TextInput
                 value={formData.ein}
@@ -978,14 +1038,16 @@ function IntakeForm() {
         {/* Section 2: Primary Contact */}
         <FormSection number="2" title="Primary Contact" description="Who should we reach out to?">
           <FormGrid>
-            <FormField label="Full Name" required error={errors.contactName}>
-              <TextInput
-                value={formData.contactName}
-                onChange={(v) => updateField('contactName', v)}
-                placeholder="John Smith"
-                error={errors.contactName}
-              />
-            </FormField>
+            <div data-field="contactName">
+              <FormField label="Full Name" required error={errors.contactName}>
+                <TextInput
+                  value={formData.contactName}
+                  onChange={(v) => updateField('contactName', v)}
+                  placeholder="John Smith"
+                  error={errors.contactName}
+                />
+              </FormField>
+            </div>
             <FormField label="Title">
               <TextInput
                 value={formData.contactTitle}
@@ -994,26 +1056,30 @@ function IntakeForm() {
               />
             </FormField>
           </FormGrid>
-          
+
           <FormGrid>
-            <FormField label="Email" required error={errors.contactEmail}>
-              <TextInput
-                type="email"
-                value={formData.contactEmail}
-                onChange={(v) => updateField('contactEmail', v)}
-                placeholder="john@company.com"
-                error={errors.contactEmail}
-              />
-            </FormField>
-            <FormField label="Phone" required error={errors.contactPhone}>
-              <TextInput
-                type="tel"
-                value={formData.contactPhone}
-                onChange={(v) => updateField('contactPhone', v)}
-                placeholder="(555) 123-4567"
-                error={errors.contactPhone}
-              />
-            </FormField>
+            <div data-field="contactEmail">
+              <FormField label="Email" required error={errors.contactEmail}>
+                <TextInput
+                  type="email"
+                  value={formData.contactEmail}
+                  onChange={(v) => updateField('contactEmail', v)}
+                  placeholder="john@company.com"
+                  error={errors.contactEmail}
+                />
+              </FormField>
+            </div>
+            <div data-field="contactPhone">
+              <FormField label="Phone" required error={errors.contactPhone}>
+                <TextInput
+                  type="tel"
+                  value={formData.contactPhone}
+                  onChange={(v) => updateField('contactPhone', v)}
+                  placeholder="(555) 123-4567"
+                  error={errors.contactPhone}
+                />
+              </FormField>
+            </div>
           </FormGrid>
         </FormSection>
 
@@ -1026,28 +1092,32 @@ function IntakeForm() {
             isConditional
           >
             <FormGrid>
-              <FormField label="Does this district participate in TRS?" required error={errors.isTRS}>
-                <RadioGroup
-                  name="isTRS"
-                  value={formData.isTRS}
-                  onChange={(v) => updateField('isTRS', v)}
-                  options={[
-                    { value: 'yes', label: 'Yes' },
-                    { value: 'no', label: 'No' },
-                  ]}
-                />
-              </FormField>
-              <FormField label="Is payroll processed through an ESC?" required error={errors.paysViaESC}>
-                <RadioGroup
-                  name="paysViaESC"
-                  value={formData.paysViaESC}
-                  onChange={(v) => updateField('paysViaESC', v)}
-                  options={[
-                    { value: 'yes', label: 'Yes' },
-                    { value: 'no', label: 'No' },
-                  ]}
-                />
-              </FormField>
+              <div data-field="isTRS">
+                <FormField label="Does this district participate in TRS?" required error={errors.isTRS}>
+                  <RadioGroup
+                    name="isTRS"
+                    value={formData.isTRS}
+                    onChange={(v) => updateField('isTRS', v)}
+                    options={[
+                      { value: 'yes', label: 'Yes' },
+                      { value: 'no', label: 'No' },
+                    ]}
+                  />
+                </FormField>
+              </div>
+              <div data-field="paysViaESC">
+                <FormField label="Is payroll processed through an ESC?" required error={errors.paysViaESC}>
+                  <RadioGroup
+                    name="paysViaESC"
+                    value={formData.paysViaESC}
+                    onChange={(v) => updateField('paysViaESC', v)}
+                    options={[
+                      { value: 'yes', label: 'Yes' },
+                      { value: 'no', label: 'No' },
+                    ]}
+                  />
+                </FormField>
+              </div>
             </FormGrid>
 
             {formData.paysViaESC === 'yes' && (
@@ -1081,14 +1151,16 @@ function IntakeForm() {
           description="Help us understand your payroll setup"
         >
           <FormGrid>
-            <FormField label="Pay Frequency" required error={errors.payFrequency}>
-              <SelectInput
-                value={formData.payFrequency}
-                onChange={(v) => updateField('payFrequency', v)}
-                options={PAY_FREQUENCIES}
-                error={errors.payFrequency}
-              />
-            </FormField>
+            <div data-field="payFrequency">
+              <FormField label="Pay Frequency" required error={errors.payFrequency}>
+                <SelectInput
+                  value={formData.payFrequency}
+                  onChange={(v) => updateField('payFrequency', v)}
+                  options={PAY_FREQUENCIES}
+                  error={errors.payFrequency}
+                />
+              </FormField>
+            </div>
             <FormField label="Payroll Provider">
               <SelectInput
                 value={formData.payrollProvider}
@@ -1129,15 +1201,17 @@ function IntakeForm() {
               Employee Counts
             </p>
             <FormGrid columns={3}>
-              <FormField label="Full-Time" required error={errors.employeeCountFulltime}>
-                <TextInput
-                  type="number"
-                  value={formData.employeeCountFulltime}
-                  onChange={(v) => updateField('employeeCountFulltime', v)}
-                  placeholder="0"
-                  error={errors.employeeCountFulltime}
-                />
-              </FormField>
+              <div data-field="employeeCountFulltime">
+                <FormField label="Full-Time" required error={errors.employeeCountFulltime}>
+                  <TextInput
+                    type="number"
+                    value={formData.employeeCountFulltime}
+                    onChange={(v) => updateField('employeeCountFulltime', v)}
+                    placeholder="0"
+                    error={errors.employeeCountFulltime}
+                  />
+                </FormField>
+              </div>
               <FormField label="Part-Time">
                 <TextInput
                   type="number"
@@ -1249,9 +1323,22 @@ function IntakeForm() {
               <strong>Optional but helpful:</strong> Department, Hire Date, TRS status (for school districts)
             </p>
             <p style={{ margin: 0, fontSize: '13px', color: COLORS.sky }}>
-              <a href="#" style={{ color: COLORS.sky, textDecoration: 'underline' }}>
+              <button
+                type="button"
+                onClick={downloadCensusTemplate}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  padding: 0,
+                  color: COLORS.sky,
+                  textDecoration: 'underline',
+                  cursor: 'pointer',
+                  fontSize: '13px',
+                  fontFamily: 'inherit',
+                }}
+              >
                 Download census template →
-              </a>
+              </button>
             </p>
           </div>
         </FormSection>
@@ -1302,7 +1389,7 @@ function IntakeForm() {
             padding: '20px',
             marginBottom: '20px',
           }}>
-            <div style={{ marginBottom: '16px' }}>
+            <div data-field="agreedToTerms" style={{ marginBottom: '16px' }}>
               <Checkbox
                 checked={formData.agreedToTerms}
                 onChange={(v) => updateField('agreedToTerms', v)}
@@ -1317,7 +1404,7 @@ function IntakeForm() {
                 <p style={{ margin: '4px 0 0 28px', fontSize: '12px', color: COLORS.red }}>{errors.agreedToTerms}</p>
               )}
             </div>
-            <div>
+            <div data-field="agreedToAnalysis">
               <Checkbox
                 checked={formData.agreedToAnalysis}
                 onChange={(v) => updateField('agreedToAnalysis', v)}
@@ -1335,14 +1422,16 @@ function IntakeForm() {
           </div>
 
           <FormGrid>
-            <FormField label="Signature (Type Full Name)" required error={errors.signatureName}>
-              <TextInput
-                value={formData.signatureName}
-                onChange={(v) => updateField('signatureName', v)}
-                placeholder="Type your full name"
-                error={errors.signatureName}
-              />
-            </FormField>
+            <div data-field="signatureName">
+              <FormField label="Signature (Type Full Name)" required error={errors.signatureName}>
+                <TextInput
+                  value={formData.signatureName}
+                  onChange={(v) => updateField('signatureName', v)}
+                  placeholder="Type your full name"
+                  error={errors.signatureName}
+                />
+              </FormField>
+            </div>
             <FormField label="Title">
               <TextInput
                 value={formData.signatureTitle}

@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Employer Intake | Live Well 360</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%231A395C'/><text x='50%' y='55%' dominant-baseline='middle' text-anchor='middle' fill='%237AC143' font-size='18' font-family='Arial' font-weight='bold'>LW</text></svg>" />
     <meta name="description" content="Submit your company information to get started with Live Well 360's wellness benefit program." />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -18,6 +19,11 @@
         font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
+      }
+      @media (max-width: 640px) {
+        .form-grid-2, .form-grid-3 { grid-template-columns: 1fr !important; }
+        .intake-card { padding: 20px 16px !important; }
+        .intake-container { padding: 16px !important; }
       }
     </style>
   </head>
